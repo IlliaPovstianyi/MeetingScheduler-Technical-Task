@@ -1,0 +1,164 @@
+﻿/* ----- Animation ----- */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translate3d(0, 20px, 0); }
+    to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+
+.animate-appear {
+    animation-name: fadeInUp;
+    animation-duration: 0.6s;
+    animation-fill-mode: both;
+    animation-timing-function: ease-out;
+}
+
+/* Main Page Background */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    background-color: #f0f2f5; 
+    font-family: 'Open Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    overflow-y: auto; /* Allow scrolling on small phones if needed */
+}
+
+/* Top Bar - Default PC Style */
+.top-bar {
+    width: 100%;
+    padding: 30px 50px;
+    box-sizing: border-box;
+    /* On PC, we stick it to the top-left corner */
+    position: absolute; 
+    top: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.logo {
+    height: 100px; 
+    width: auto;
+    display: block;
+}
+
+/* wrapper to center the card */
+.content-wrapper {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* The Login Card */
+.login-card {
+    background-color: #ffffff;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 4px 10px rgba(0, 0, 0, 0.05);
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    
+    /* NARROWER PC WIDTH: Reduced from 440px to 360px */
+    max-width: 360px; 
+    text-align: center;
+}
+
+/* Typography */
+.welcome-text {
+    font-size: 2.2rem; /* Slightly adjusted for narrower card */
+    font-weight: 700;
+    color: #0075ff; 
+    margin: 0 0 10px 0;
+}
+
+.subtitle-text {
+    font-size: 1rem;
+    color: #5f6368;
+    margin: 0 0 35px 0;
+}
+
+/* Google Button */
+.google-btn {
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border: 1px solid #dadce0;
+    border-radius: 25px;
+    padding: 0;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: all 0.2s ease;
+    font-family: 'Roboto', sans-serif;
+    height: 48px;
+    width: 100%;
+}
+
+.google-btn:hover {
+    background-color: #f8faff;
+    box-shadow: 0 4px 12px rgba(0,117,255,0.2);
+    border-color: #0075FF;
+    transform: translateY(-1px);
+}
+
+.google-btn:active {
+    transform: translateY(0);
+}
+
+.google-icon-wrapper {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.google-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.btn-text {
+    font-size: 15px;
+    font-weight: 500;
+    color: #3c4043;
+    flex-grow: 1;
+    text-align: center;
+    padding-right: 46px;
+}
+
+/* ----- MOBILE ADJUSTMENTS ----- */
+@media (max-width: 600px) {
+    /* 1. Change Top Bar from Absolute to Relative so it flows in the document */
+    .top-bar {
+        position: relative; 
+        padding: 40px 0 20px 0; /* Add top padding, reduce bottom */
+        display: flex;
+        justify-content: center; /* Center the logo horizontally */
+    }
+
+    /* 2. Resize logo for mobile */
+    .logo {
+        height: 100px;
+    }
+
+    /* 3. Adjust Content Wrapper to remove extra spacing since logo is now part of flow */
+    .content-wrapper {
+        align-items: flex-start; /* Move card closer to logo */
+        padding-top: 10px;
+    }
+
+    /* 4. Keep the card styles! */
+    .login-card {
+        /* Ensure background and shadow remain visible */
+        background-color: #ffffff;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        max-width: 340px; /* Fits nicely on most phones */
+    }
+}
