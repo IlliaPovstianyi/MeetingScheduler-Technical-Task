@@ -1,4 +1,5 @@
 ﻿@page "/authentication"
+@rendermode InteractiveServer
 
 <PageTitle>Authentication</PageTitle>
 
@@ -25,10 +26,14 @@
     </div>
 </div>
 
+
+@inject NavigationManager NavigationManager
+
 @code {
     private void HandleGoogleLogin()
     {
-        // Your backend authentication logic goes here.
         Console.WriteLine("Redirecting to Google Auth (CZ)...");
+        NavigationManager.NavigateTo("/login-google", forceLoad: true);
+        
     }
 }
