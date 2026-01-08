@@ -1,2 +1,6 @@
 # MeetingScheduler-Technical-Task
-Technical task for SCIO
+Technický úkol pro společnost SCIO – webová aplikace pro sjednávání schůzek.
+
+Aplikace umožňuje uživatelům generovat unikátní odkazy, přes které si mohou ostatní sjednat schůzku. Po přihlášení přes Google účet dostanete odkaz, který sdílíte, a kdokoliv si pak může vybrat volný termín ve vašem kalendáři.
+
+...
