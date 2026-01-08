@@ -1,7 +1,13 @@
 ﻿@page "/"
+@inject NavigationManager NavigationManager
 
-<PageTitle>Home</PageTitle>
-
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
+@code {
+    bool IsAuthenticated = false; //Temporary
+    protected override void OnInitialized()
+    {
+        if (!IsAuthenticated)
+        {
+            NavigationManager.NavigateTo("/authentication");
+        }
+    }
+}
