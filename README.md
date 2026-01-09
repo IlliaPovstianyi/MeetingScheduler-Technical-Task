@@ -12,3 +12,10 @@ Získejte přihlašovací údaje z Google Cloud Console
 Spusťte tyto příkazy s VAŠIMI přihlašovacími údaji:
 dotnet user-secrets set "Authentication:Google:ClientId" "YOUR_ID"
 dotnet user-secrets set "Authentication:Google:ClientSecret" "YOUR_SECRET"
+
+# Nastavení SQL Server
+
+Zkopírujte appsettings.Development.json.example do appsettings.Development.json
+Nastavte heslo k SQL Serveru
+Spusťte:
+dotnet ef database update
