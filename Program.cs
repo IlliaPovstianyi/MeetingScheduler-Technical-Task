@@ -1,7 +1,9 @@
 using MeetingScheduler_Technical_Task.Components;
+using MeetingScheduler_Technical_Task.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,17 +11,42 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+// Register application services
+builder.Services.AddScoped<IUserService, UserService>();
+
+// Add support for HttpContext in Blazor
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddCascadingAuthenticationState();
+
 // Google authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
 })
-.AddCookie()
+.AddCookie(options =>
+{
+    options.LoginPath = "/authentication";
+    options.LogoutPath = "/logout";
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.SlidingExpiration = true;
+})
 .AddGoogle(options =>
 {
     options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+
+    // Request additional scopes for user profile information
+    options.Scope.Add("profile");
+    options.Scope.Add("email");
+
+    // Save tokens for potential future API calls
+    options.SaveTokens = true;
+
+    // Map claims to standard claim types
+    options.ClaimActions.MapJsonKey(ClaimTypes.GivenName, "given_name");
+    options.ClaimActions.MapJsonKey(ClaimTypes.Surname, "family_name");
+    options.ClaimActions.MapJsonKey("picture", "picture");
 });
 
 var app = builder.Build();
@@ -40,16 +67,25 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Google authentication
+// Authentication and Authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
-app.MapGet("/login-google", () => 
+
+// Google login endpoint
+app.MapGet("/login-google", () =>
 {
-    var properties = new AuthenticationProperties 
-    { 
-        RedirectUri = "/" 
+    var properties = new AuthenticationProperties
+    {
+        RedirectUri = "/authentication-callback"
     };
     return Results.Challenge(properties, new[] { GoogleDefaults.AuthenticationScheme });
-});
+}).AllowAnonymous();
+
+// Logout endpoint
+app.MapGet("/logout", async (HttpContext context) =>
+{
+    await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    return Results.Redirect("/authentication");
+}).RequireAuthorization();
 
 app.Run();
