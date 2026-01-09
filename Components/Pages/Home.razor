@@ -1,5 +1,6 @@
 ﻿@page "/"
 @attribute [Authorize]
+@rendermode InteractiveServer
 @inject IUserService UserService
 
 <PageTitle>Home</PageTitle>
@@ -47,7 +48,7 @@
                         <div class="card-emoji">📅</div>
                         <h2 class="card-title">Můj kalendář</h2>
                         <p class="card-description">Prohlédněte si své naplánované schůzky a spravujte svou dostupnost</p>
-                        <button class="card-btn">
+                        <button @onclick="ShowCalendar" class="card-btn">
                             Zobrazit kalendář
                         </button>
                     </div>
@@ -68,6 +69,7 @@
 </AuthorizeView>
 
 
+@inject NavigationManager NavigationManager
 
 @code {
     [CascadingParameter]
@@ -82,5 +84,10 @@
             var authState = await AuthenticationStateTask;
             CurrentUser = UserService.GetUserFromClaims(authState.User);
         }
+    }
+
+    private void ShowCalendar()
+    {
+        NavigationManager.NavigateTo("/calendar", forceLoad: true);
     }
 }

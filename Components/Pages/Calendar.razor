@@ -1,0 +1,37 @@
+@page "/calendar"
+@attribute [Authorize]
+
+<PageTitle>Home</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <h1>Welcome, @CurrentUser?.FirstName @CurrentUser?.LastName!</h1>
+        <p>Email: @CurrentUser?.Email</p>
+
+        @if (!string.IsNullOrEmpty(CurrentUser?.ProfilePictureUrl))
+        {
+            <img src="@CurrentUser.ProfilePictureUrl" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%;" />
+        }
+
+        <br />
+        <a href="/logout">Logout</a>
+    </Authorized>
+</AuthorizeView>
+
+@inject IUserService UserService
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
+
+    private User? CurrentUser { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationStateTask != null)
+        {
+            var authState = await AuthenticationStateTask;
+            CurrentUser = UserService.GetUserFromClaims(authState.User);
+        }
+    }
+}
