@@ -1,24 +1,85 @@
 ﻿@page "/"
 @attribute [Authorize]
+@inject IUserService UserService
 
 <PageTitle>Home</PageTitle>
 
 <AuthorizeView>
     <Authorized>
-        <h1>Welcome, @CurrentUser?.FirstName @CurrentUser?.LastName!</h1>
-        <p>Email: @CurrentUser?.Email</p>
+        <div class="home-container">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="logo-section">
+                    <img src="/images/scio-logo.png" alt="SCIO Logo" class="logo" />
+                </div>
+                <div class="profile-section">
+                    <span class="profile-name">@CurrentUser?.FirstName @CurrentUser?.LastName</span>
+                    @if (!string.IsNullOrEmpty(CurrentUser?.ProfilePictureUrl))
+                    {
+                        <img src="@CurrentUser.ProfilePictureUrl" alt="Profil" class="profile-avatar" />
+                    }
+                    else
+                    {
+                        <div class="profile-avatar-placeholder">
+                            @CurrentUser?.FirstName?.FirstOrDefault()
+                        </div>
+                    }
+                    <a href="/logout" class="logout-link" title="Odhlásit se">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </a>
+                </div>
+            </header>
 
-        @if (!string.IsNullOrEmpty(CurrentUser?.ProfilePictureUrl))
-        {
-            <img src="@CurrentUser.ProfilePictureUrl" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%;" />
-        }
+            <!-- Main Content -->
+            <main class="content-wrapper">
+                <div class="welcome-section animate-appear">
+                    <h1 class="welcome-text">Vítejte zpět!</h1>
+                    <p class="subtitle-text">Spravujte své schůzky a sdílejte svůj kalendář</p>
+                </div>
 
-        <br />
-        <a href="/logout">Logout</a>
+                <div class="cards-container">
+                    <!-- Calendar Card -->
+                    <div class="action-card animate-appear" style="animation-delay: 0.1s;">
+                        <div class="card-icon calendar-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </div>
+                        <h2 class="card-title">Můj kalendář</h2>
+                        <p class="card-description">Prohlédněte si své naplánované schůzky a spravujte svou dostupnost</p>
+                        <button class="card-btn primary-btn">
+                            Zobrazit kalendář
+                        </button>
+                    </div>
+
+                    <!-- Share Link Card -->
+                    <div class="action-card animate-appear" style="animation-delay: 0.2s;">
+                        <div class="card-icon share-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                        </div>
+                        <h2 class="card-title">Sdílet odkaz</h2>
+                        <p class="card-description">Vygenerujte unikátní odkaz pro sjednání jednorázové schůzky</p>
+                        <button class="card-btn secondary-btn">
+                            Vygenerovat odkaz
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
     </Authorized>
 </AuthorizeView>
 
-@inject IUserService UserService
+
 
 @code {
     [CascadingParameter]
