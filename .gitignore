@@ -42,6 +42,7 @@ ScaffoldingReadMe.txt
 CodeCoverage/
 .claude
 .claude/*
+appsettings.Development.json
 
 # MSBuild Binary and Structured Log
 *.binlog
