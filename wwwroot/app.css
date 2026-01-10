@@ -27,23 +27,3 @@ h1:focus {
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
 }
-
-.logo {
-    height: 20px;
-    width: auto;
-}
-
-/* Top Bar */
-.top-bar {
-    width: 100%;
-    padding: 20px 40px;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}

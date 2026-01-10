@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using MeetingScheduler_Technical_Task.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,10 +15,15 @@ builder.Services.AddRazorComponents()
 
 // Register application services
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 // Add support for HttpContext in Blazor
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddCascadingAuthenticationState();
+
+// SQL Server setup
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Google authentication
 builder.Services.AddAuthentication(options =>

@@ -1,6 +1,6 @@
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost,1433;Database=MeetingScheduler;User Id=sa;Password=ScioPass!;TrustServerCertificate=True"
+    "DefaultConnection": "Server=localhost,1433;Database=MeetingScheduler;User Id=sa;Password=<SOMEPASSWORD>;TrustServerCertificate=True"
   },
   "Logging": {
     "LogLevel": {

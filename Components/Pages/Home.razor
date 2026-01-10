@@ -82,7 +82,7 @@
         if (AuthenticationStateTask != null)
         {
             var authState = await AuthenticationStateTask;
-            CurrentUser = UserService.GetUserFromClaims(authState.User);
+            CurrentUser = await UserService.GetUserFromClaims(authState.User);
         }
     }
 
