@@ -1,31 +1,141 @@
 @page "/calendar"
 @attribute [Authorize]
+@rendermode InteractiveServer
+@inject IUserService UserService
+@inject IHolidayService HolidayService
+@inject NavigationManager NavigationManager
 
-
-<PageTitle>Home</PageTitle>
+<PageTitle>Kalendář</PageTitle>
 
 <AuthorizeView>
     <Authorized>
-        <h1>Welcome, @CurrentUser?.FirstName @CurrentUser?.LastName!</h1>
-        <p>Email: @CurrentUser?.Email</p>
+        <div class="home-container">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="logo-section">
+                    <img src="/images/scio-logo.png" alt="SCIO Logo" class="logo" />
+                </div>
+                <div class="profile-section">
+                    <span class="profile-name">@CurrentUser?.FirstName @CurrentUser?.LastName</span>
+                    @if (!string.IsNullOrEmpty(CurrentUser?.ProfilePictureUrl))
+                    {
+                        <img src="@CurrentUser.ProfilePictureUrl" alt="Profil" class="profile-avatar" />
+                    }
+                    else
+                    {
+                        <div class="profile-avatar-placeholder">
+                            @CurrentUser?.FirstName?.FirstOrDefault()
+                        </div>
+                    }
+                    <a href="/logout" class="logout-link" title="Odhlásit se">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
+                        </svg>
+                    </a>
+                </div>
+            </header>
 
-        @if (!string.IsNullOrEmpty(CurrentUser?.ProfilePictureUrl))
-        {
-            <img src="@CurrentUser.ProfilePictureUrl" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%;" />
-        }
+            <!-- Main Content -->
+            <main class="content-wrapper">
+                <div class="welcome-section animate-appear">
+                    <h1 class="welcome-text">Můj kalendář</h1>
+                    <p class="subtitle-text">Prohlédněte si své naplánované schůzky a spravujte svou dostupnost</p>
+                </div>
 
-        <br />
-        <a href="/logout">Logout</a>
+                <div class="calendar-card animate-appear" style="animation-delay: 0.1s;">
+                    <!-- Calendar Navigation -->
+                    <div class="calendar-nav">
+                        <button class="nav-btn back-btn" @onclick="GoHome">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            Zpět
+                        </button>
+
+                        <div class="nav-center">
+                            <button class="arrow-btn" @onclick="PreviousMonth" title="Předchozí měsíc">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="15 18 9 12 15 6"></polyline>
+                                </svg>
+                            </button>
+
+                            <div class="date-selectors">
+                                <select class="date-select" @bind="SelectedMonth" @bind:after="OnDateChanged">
+                                    @foreach (var month in Months)
+                                    {
+                                        <option value="@month.Value">@month.Name</option>
+                                    }
+                                </select>
+                                <select class="date-select" @bind="SelectedYear" @bind:after="OnDateChanged">
+                                    @foreach (var year in Years)
+                                    {
+                                        <option value="@year">@year</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <button class="arrow-btn" @onclick="NextMonth" title="Další měsíc">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <button class="nav-btn today-btn" @onclick="GoToToday">
+                            Dnes
+                        </button>
+                    </div>
+
+                    <!-- Calendar Grid -->
+                    <div class="calendar-grid">
+                        <!-- Day Headers -->
+                        <div class="day-header">Po</div>
+                        <div class="day-header">Út</div>
+                        <div class="day-header">St</div>
+                        <div class="day-header">Čt</div>
+                        <div class="day-header">Pá</div>
+                        <div class="day-header weekend">So</div>
+                        <div class="day-header weekend">Ne</div>
+
+                        <!-- Calendar Days -->
+                        @foreach (var day in CalendarDays)
+                        {
+                            <div class="@GetDayClasses(day)" @onclick="() => OnDayClick(day)">
+                                @if (day.Date.HasValue)
+                                {
+                                    <span class="day-number">@day.Date.Value.Day</span>
+                                    @if (day.IsBooked)
+                                    {
+                                        <span class="day-indicator booked"></span>
+                                    }
+                                    @if (day.IsHoliday)
+                                    {
+                                        <span class="day-indicator holiday"></span>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </main>
+        </div>
     </Authorized>
 </AuthorizeView>
-
-@inject IUserService UserService
 
 @code {
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
     private User? CurrentUser { get; set; }
+
+    private int SelectedMonth { get; set; }
+    private int SelectedYear { get; set; }
+
+    private List<CalendarDay> CalendarDays { get; set; } = new();
+    private List<(int Value, string Name)> Months { get; set; } = new();
+    private List<int> Years { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -34,5 +144,164 @@
             var authState = await AuthenticationStateTask;
             CurrentUser = await UserService.GetUserFromClaims(authState.User);
         }
+
+        InitializeMonths();
+        InitializeYears();
+
+        var today = DateTime.Today;
+        SelectedMonth = today.Month;
+        SelectedYear = today.Year;
+
+        GenerateCalendarDays();
     }
+
+    private void InitializeMonths()
+    {
+        Months = new List<(int, string)>
+        {
+            (1, "Leden"),
+            (2, "Únor"),
+            (3, "Březen"),
+            (4, "Duben"),
+            (5, "Květen"),
+            (6, "Červen"),
+            (7, "Červenec"),
+            (8, "Srpen"),
+            (9, "Září"),
+            (10, "Říjen"),
+            (11, "Listopad"),
+            (12, "Prosinec")
+        };
+    }
+
+    private void InitializeYears()
+    {
+        var currentYear = DateTime.Today.Year;
+        Years = Enumerable.Range(currentYear - 5, 11).ToList();
+    }
+
+    private void GenerateCalendarDays()
+    {
+        CalendarDays.Clear();
+
+        var firstDayOfMonth = new DateTime(SelectedYear, SelectedMonth, 1);
+        var daysInMonth = DateTime.DaysInMonth(SelectedYear, SelectedMonth);
+
+        // Get the day of week (Monday = 0, Sunday = 6)
+        var startDayOfWeek = ((int)firstDayOfMonth.DayOfWeek + 6) % 7;
+
+        // Add empty days for previous month
+        for (int i = 0; i < startDayOfWeek; i++)
+        {
+            CalendarDays.Add(new CalendarDay { Date = null });
+        }
+
+        // Add days of current month
+        for (int day = 1; day <= daysInMonth; day++)
+        {
+            var date = new DateTime(SelectedYear, SelectedMonth, day);
+            CalendarDays.Add(new CalendarDay
+            {
+                Date = date,
+                IsToday = date == DateTime.Today,
+                IsWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday,
+                IsBooked = false, // Set this based on your data
+                IsHoliday = HolidayService.IsHoliday(date) 
+            });
+        }
+
+        // Add empty days to complete the last week
+        var remainingDays = 7 - (CalendarDays.Count % 7);
+        if (remainingDays < 7)
+        {
+            for (int i = 0; i < remainingDays; i++)
+            {
+                CalendarDays.Add(new CalendarDay { Date = null });
+            }
+        }
+    }
+
+    private string GetDayClasses(CalendarDay day)
+    {
+        var classes = new List<string> { "calendar-day" };
+
+        if (!day.Date.HasValue)
+        {
+            classes.Add("empty");
+            return string.Join(" ", classes);
+        }
+
+        if (day.IsToday) classes.Add("today");
+        if (day.IsWeekend) classes.Add("weekend");
+        if (day.IsBooked) classes.Add("booked");
+        if (day.IsHoliday) classes.Add("holiday");
+
+        return string.Join(" ", classes);
+    }
+
+    private void OnDateChanged()
+    {
+        GenerateCalendarDays();
+    }
+
+    private void PreviousMonth()
+    {
+        if (SelectedMonth == 1)
+        {
+            SelectedMonth = 12;
+            SelectedYear--;
+            if (!Years.Contains(SelectedYear))
+            {
+                Years.Insert(0, SelectedYear);
+            }
+        }
+        else
+        {
+            SelectedMonth--;
+        }
+        GenerateCalendarDays();
+    }
+
+    private void NextMonth()
+    {
+        if (SelectedMonth == 12)
+        {
+            SelectedMonth = 1;
+            SelectedYear++;
+            if (!Years.Contains(SelectedYear))
+            {
+                Years.Add(SelectedYear);
+            }
+        }
+        else
+        {
+            SelectedMonth++;
+        }
+        GenerateCalendarDays();
+    }
+
+    private void GoToToday()
+    {
+        var today = DateTime.Today;
+        SelectedMonth = today.Month;
+        SelectedYear = today.Year;
+        GenerateCalendarDays();
+    }
+
+    private void GoHome()
+    {
+        NavigationManager.NavigateTo("/", forceLoad: true);
+    }
+
+    private void OnDayClick(CalendarDay day)
+    {
+        if (day.Date.HasValue)
+        {
+            // Handle day click - you can implement your logic here
+            // For example: NavigationManager.NavigateTo($"/calendar/day/{day.Date.Value:yyyy-MM-dd}");
+        }
+    }
+
+    // Model for calendar day - allows future customization
+    
 }
