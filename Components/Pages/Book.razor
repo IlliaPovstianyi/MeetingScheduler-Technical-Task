@@ -298,11 +298,15 @@
 
 
         //TODO: Separate logic from calendar
-        Guid linkTokenGuid = Guid.Parse(LinkToken);
         // Load calendar owner by link ID
+        if(await BookingService.CheckLinkExpired(Guid.Parse(LinkToken))){
+            IsLoading = false;
+            return;
+        }
+
         if (LinkToken != null)
         {
-            CalendarOwner = await BookingService.GetLinkOwnerByToken(linkTokenGuid);
+            CalendarOwner = await BookingService.GetLinkOwnerByToken(Guid.Parse(LinkToken));
             if (CalendarOwner != null)
             {
                 await LoadMeetingsCount();

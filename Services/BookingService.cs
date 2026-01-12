@@ -51,6 +51,16 @@ public class BookingService : IBookingService
         .ExecuteUpdateAsync(b => b.SetProperty(x => x.IsExpired, true));
     }
 
+    public async Task<bool> CheckLinkExpired(Guid Token)
+    {
+        //Here expired links can be removed if no logging/history features will be required
+
+        return await context.BookingLinks
+        .Where(b => b.Token == Token)
+        .Select(b => b.IsExpired)
+        .FirstOrDefaultAsync();
+    }
+
     public async Task AssignMeetingToPerson(string OwnerGoogleId, Meeting newMeeting)
     {
         User user = await context.Users

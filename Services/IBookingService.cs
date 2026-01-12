@@ -4,5 +4,6 @@ public interface IBookingService
     Task<string?> GenerateBookingLink(User Owner);
     Task<User?> GetLinkOwnerByToken(Guid Token);
     Task MarkLinkExpired(Guid Token);
+    Task<bool> CheckLinkExpired(Guid Token);
     Task AssignMeetingToPerson(string OwnerId, Meeting meeting);
 }
