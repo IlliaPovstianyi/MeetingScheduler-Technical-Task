@@ -1,0 +1,640 @@
+@page "/book/{LinkToken}"
+@rendermode InteractiveServer
+@inject IBookingService BookingService
+@inject IHolidayService HolidayService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Sjednat schůzku</PageTitle>
+
+<div class="home-container">
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="logo-section">
+            <img src="/images/scio-logo.png" alt="SCIO Logo" class="logo" />
+        </div>
+        <div class="profile-section">
+            <AuthorizeView>
+                <Authorized>
+                    <span class="profile-name">@context.User.Identity?.Name</span>
+                </Authorized>
+                <NotAuthorized>
+                    <a href="/login" class="nav-btn login-btn">Přihlásit se</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content-wrapper">
+        @if (IsLoading)
+        {
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+                <p>Načítání...</p>
+            </div>
+        }
+        else if (CalendarOwner == null)
+        {
+            <div class="error-section animate-appear">
+                <h1 class="error-text">Odkaz nebyl nalezen</h1>
+                <p class="subtitle-text">Tento odkaz pro sjednání schůzky neexistuje nebo vypršel.</p>
+            </div>
+        }
+        else if (MeetingBooked)
+        {
+            <div class="success-section animate-appear">
+                <div class="success-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                </div>
+                <h1 class="success-text">Schůzka byla sjednána!</h1>
+                <p class="subtitle-text">
+                    Vaše schůzka s uživatelem @CalendarOwner.FirstName @CalendarOwner.LastName?.FirstOrDefault(). 
+                    byla úspěšně rezervována.
+                </p>
+                <div class="booking-summary">
+                    <p><strong>Datum:</strong> @BookedMeeting?.Date.ToString("d. MMMM yyyy")</p>
+                    <p><strong>Čas:</strong> @BookedMeeting?.StartTime.ToString(@"hh\:mm") - @BookedMeeting?.EndTime.ToString(@"hh\:mm")</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="welcome-section animate-appear">
+                <h1 class="welcome-text">Sjednat schůzku s uživatelem @CalendarOwner.FirstName @CalendarOwner.LastName?.FirstOrDefault().</h1>
+                <h2 class="meetings-count">
+                    Počet schůzek v tomto měsíci: @MeetingsThisMonth
+                </h2>
+            </div>
+
+            <div class="calendar-card animate-appear" style="animation-delay: 0.1s;">
+                <!-- Calendar Navigation -->
+                <div class="calendar-nav">
+                    <div class="nav-center">
+                        <button class="arrow-btn" @onclick="PreviousMonth" disabled="@(!CanGoPrevious)" title="Předchozí měsíc">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+
+                        <div class="date-selectors">
+                            <select class="date-select" @bind="SelectedMonth" @bind:after="OnDateChanged">
+                                @foreach (var month in AvailableMonths)
+                                {
+                                    <option value="@month.Value">@month.Name</option>
+                                }
+                            </select>
+                            <select class="date-select" @bind="SelectedYear" @bind:after="OnDateChanged">
+                                @foreach (var year in AvailableYears)
+                                {
+                                    <option value="@year">@year</option>
+                                }
+                            </select>
+                        </div>
+
+                        <button class="arrow-btn" @onclick="NextMonth" disabled="@(!CanGoNext)" title="Další měsíc">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <button class="nav-btn today-btn" @onclick="GoToToday">
+                        Dnes
+                    </button>
+                </div>
+
+                <!-- Legend -->
+                <div class="calendar-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot available"></span>
+                        <span>Dostupný</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot booked"></span>
+                        <span>Obsazený termín</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot unavailable"></span>
+                        <span>Nedostupný</span>
+                    </div>
+                </div>
+
+                <!-- Calendar Grid -->
+                <div class="calendar-grid">
+                    <!-- Day Headers -->
+                    <div class="day-header">Po</div>
+                    <div class="day-header">Út</div>
+                    <div class="day-header">St</div>
+                    <div class="day-header">Čt</div>
+                    <div class="day-header">Pá</div>
+                    <div class="day-header weekend">So</div>
+                    <div class="day-header weekend">Ne</div>
+
+                    <!-- Calendar Days -->
+                    @foreach (var day in CalendarDays)
+                    {
+                        <div class="@GetDayClasses(day)" @onclick="() => OnDayClick(day)" title="@GetDayTooltip(day)">
+                            @if (day.Date.HasValue)
+                            {
+                                <span class="day-number">@day.Date.Value.Day</span>
+                                @if (day.BookingCount > 0)
+                                {
+                                    <span class="day-indicator booked"></span>
+                                }
+                                @if (day.IsHoliday)
+                                {
+                                    <span class="day-indicator holiday"></span>
+                                }
+                                @if (day.HasMeeting)
+                                {
+                                    <span class="day-indicator user-booking"></span>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </main>
+</div>
+
+<!-- Booking Modal -->
+@if (ShowBookingModal && SelectedDay != null)
+{
+    <div class="modal-overlay" @onclick="CloseModal">
+        <div class="modal-content" @onclick:stopPropagation>
+            <div class="modal-header">
+                <h2>Sjednat schůzku - @SelectedDay.Date?.ToString("d. MMMM yyyy")</h2>
+                <button class="modal-close" @onclick="CloseModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Duration Selection -->
+                <div class="form-group">
+                    <label class="form-label">Délka schůzky</label>
+                    <div class="duration-options">
+                        <label class="duration-option @(SelectedDuration == 30 ? "selected" : "")">
+                            <input type="radio" name="duration" value="30" checked="@(SelectedDuration == 30)" @onchange="() => OnDurationChanged(30)" />
+                            <span class="duration-label">30 minut</span>
+                        </label>
+                        <label class="duration-option @(SelectedDuration == 45 ? "selected" : "")">
+                            <input type="radio" name="duration" value="45" checked="@(SelectedDuration == 45)" @onchange="() => OnDurationChanged(45)" />
+                            <span class="duration-label">45 minut</span>
+                        </label>
+                        <label class="duration-option @(SelectedDuration == 60 ? "selected" : "")">
+                            <input type="radio" name="duration" value="60" checked="@(SelectedDuration == 60)" @onchange="() => OnDurationChanged(60)" />
+                            <span class="duration-label">1 hodina</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Time Slot Selection -->
+                <div class="form-group">
+                    <label class="form-label">Vyberte čas</label>
+                    <div class="time-slots">
+                        @foreach (var slot in AvailableTimeSlots)
+                        {
+                            <label class="time-slot @(slot.IsAvailable ? "" : "disabled") @(SelectedTimeSlot == slot ? "selected" : "")">
+                                <input type="radio" 
+                                       name="timeslot" 
+                                       value="@slot.StartTime" 
+                                       disabled="@(!slot.IsAvailable)"
+                                       checked="@(SelectedTimeSlot == slot)"
+                                       @onchange="() => OnTimeSlotSelected(slot)" />
+                                <span class="slot-time">
+                                    @slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")
+                                    @if (!slot.IsAvailable)
+                                    {
+                                        <span class="slot-status">(@slot.UnavailableReason)</span>
+                                    }
+                                </span>
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="form-group">
+                    <label class="form-label" for="firstName">Vaše jméno *</label>
+                    <input type="text" id="firstName" class="form-input" @bind="BookingFirstName" placeholder="Zadejte vaše jméno" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="lastName">Vaše příjmení *</label>
+                    <input type="text" id="lastName" class="form-input" @bind="BookingLastName" placeholder="Zadejte vaše příjmení" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(BookingError))
+                {
+                    <div class="form-error">
+                        @BookingError
+                    </div>
+                }
+            </div>
+
+            <div class="modal-footer">
+                <button class="nav-btn" @onclick="CloseModal">Zrušit</button>
+                <button class="nav-btn back-btn" @onclick="ConfirmBooking" disabled="@(!CanConfirmBooking)">
+                    Potvrdit schůzku
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? LinkToken { get; set; }
+
+    private User? CalendarOwner { get; set; }
+    private bool IsLoading { get; set; } = true;
+    private bool MeetingBooked { get; set; } = false;
+    private Meeting? BookedMeeting { get; set; }
+
+    private int SelectedMonth { get; set; }
+    private int SelectedYear { get; set; }
+    private int MeetingsThisMonth { get; set; }
+
+    private List<CalendarDay> CalendarDays { get; set; } = new();
+    private List<(int Value, string Name)> Months { get; set; } = new();
+    private List<(int Value, string Name)> AvailableMonths { get; set; } = new();
+    private List<int> AvailableYears { get; set; } = new();
+
+    // Modal state
+    private bool ShowBookingModal { get; set; } = false;
+    private CalendarDay? SelectedDay { get; set; }
+    private int SelectedDuration { get; set; } = 30;
+    private List<TimeSlot> AvailableTimeSlots { get; set; } = new();
+    private TimeSlot? SelectedTimeSlot { get; set; }
+    private string BookingFirstName { get; set; } = "";
+    private string BookingLastName { get; set; } = "";
+    private string BookingError { get; set; } = "";
+
+    // Navigation constraints (max 2 months ahead)
+    private DateTime MinDate => DateTime.Today.AddDays(1);
+    private DateTime MaxDate => DateTime.Today.AddMonths(2);
+
+    private bool CanGoPrevious => new DateTime(SelectedYear, SelectedMonth, 1) > new DateTime(MinDate.Year, MinDate.Month, 1);
+    private bool CanGoNext => new DateTime(SelectedYear, SelectedMonth, 1) < new DateTime(MaxDate.Year, MaxDate.Month, 1);
+    private bool CanConfirmBooking => SelectedTimeSlot != null && 
+                                       !string.IsNullOrWhiteSpace(BookingFirstName) && 
+                                       !string.IsNullOrWhiteSpace(BookingLastName);
+
+    protected override async Task OnInitializedAsync()
+    {
+        InitializeMonths();
+
+        var today = DateTime.Today;
+        SelectedMonth = today.Month;
+        SelectedYear = today.Year;
+
+
+        //TODO: Separate logic from calendar
+        Guid linkTokenGuid = Guid.Parse(LinkToken);
+        // Load calendar owner by link ID
+        if (LinkToken != null)
+        {
+            CalendarOwner = await BookingService.GetLinkOwnerByToken(linkTokenGuid);
+            if (CalendarOwner != null)
+            {
+                await LoadMeetingsCount();
+                await GenerateCalendarDays();
+            }
+        }
+
+        UpdateAvailableMonthsAndYears();
+        IsLoading = false;
+    }
+
+    private void InitializeMonths()
+    {
+        Months = new List<(int, string)>
+        {
+            (1, "Leden"), (2, "Únor"), (3, "Březen"), (4, "Duben"),
+            (5, "Květen"), (6, "Červen"), (7, "Červenec"), (8, "Srpen"),
+            (9, "Září"), (10, "Říjen"), (11, "Listopad"), (12, "Prosinec")
+        };
+    }
+
+    private void UpdateAvailableMonthsAndYears()
+    {
+        // Only allow current month and next 2 months
+        AvailableYears = new List<int>();
+        AvailableMonths = new List<(int, string)>();
+
+        var current = new DateTime(MinDate.Year, MinDate.Month, 1);
+        var max = new DateTime(MaxDate.Year, MaxDate.Month, 1);
+
+        while (current <= max)
+        {
+            if (!AvailableYears.Contains(current.Year))
+                AvailableYears.Add(current.Year);
+
+            if (current.Year == SelectedYear)
+                AvailableMonths.Add(Months[current.Month - 1]);
+
+            current = current.AddMonths(1);
+        }
+    }
+
+    private async Task LoadMeetingsCount()
+    {
+        if (CalendarOwner == null) return;
+        
+        MeetingsThisMonth = GetMeetingsForMonth(DateTime.Now.Year, DateTime.Now.Month).Count();
+    }
+
+    public List<Meeting> GetMeetingsForMonth(int year, int month)
+    {
+        var firstDay = new DateTime(year, month, 1);
+        var lastDay = firstDay.AddMonths(1).AddDays(-1);
+
+        //If Meetings is not initialized, then return empty list
+        if (CalendarOwner?.Meetings == null){
+            return new List<Meeting>(); 
+        }
+
+        return CalendarOwner.Meetings
+            .Where(m => m.Date >= firstDay 
+                     && m.Date <= lastDay)
+            .OrderBy(m => m.Date)
+            .ThenBy(m => m.StartTime)
+            .ToList();
+    }
+
+    public List<Meeting> GetMeetingsForDate(DateTime date)
+    {
+        //If Meetings is not initialized, then return empty list
+        if (CalendarOwner?.Meetings == null){
+            return new List<Meeting>();
+        }
+        
+        return CalendarOwner.Meetings
+            .Where(m => m.Date.Date == date.Date)
+            .OrderBy(m => m.StartTime)
+            .ToList();
+    }
+
+    private async Task GenerateCalendarDays()
+    {
+        CalendarDays.Clear();
+
+        var firstDayOfMonth = new DateTime(SelectedYear, SelectedMonth, 1);
+        var daysInMonth = DateTime.DaysInMonth(SelectedYear, SelectedMonth);
+        var startDayOfWeek = ((int)firstDayOfMonth.DayOfWeek + 6) % 7;
+
+        // Get all meetings for this month
+        var monthMeetings = CalendarOwner != null 
+            ? GetMeetingsForMonth(SelectedYear, SelectedMonth)
+            : new List<Meeting>();
+
+        // Add empty days for previous month
+        for (int i = 0; i < startDayOfWeek; i++)
+        {
+            CalendarDays.Add(new CalendarDay { Date = null });
+        }
+
+        // Add days of current month
+        for (int day = 1; day <= daysInMonth; day++)
+        {
+            var date = new DateTime(SelectedYear, SelectedMonth, day);
+            var dayMeetings = monthMeetings.Where(m => m.Date.Date == date).ToList();
+
+            CalendarDays.Add(new CalendarDay
+            {
+                Date = date,
+                IsToday = date == DateTime.Today,
+                IsWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday,
+                IsHoliday = HolidayService.IsHoliday(date),
+                IsPast = date <= DateTime.Today,
+                IsTooFarAhead = date > MaxDate, //TODO: Make configurable via configuration file
+                BookingCount = dayMeetings.Count,
+                IsFullyBooked = dayMeetings.Count >= 3,
+                HasMeeting = false // Will be set if user already booked via this link
+            });
+        }
+
+        // Add empty days to complete the last week
+        var remainingDays = 7 - (CalendarDays.Count % 7);
+        if (remainingDays < 7)
+        {
+            for (int i = 0; i < remainingDays; i++)
+            {
+                CalendarDays.Add(new CalendarDay { Date = null });
+            }
+        }
+    }
+
+    private string GetDayClasses(CalendarDay day)
+    {
+        var classes = new List<string> { "calendar-day" };
+
+        if (!day.Date.HasValue)
+        {
+            classes.Add("empty");
+            return string.Join(" ", classes);
+        }
+
+        if (day.IsToday) classes.Add("today");
+        if (day.IsWeekend) classes.Add("weekend");
+        if (day.IsHoliday) classes.Add("holiday");
+        if (day.BookingCount > 0) classes.Add("has-bookings");
+        if (day.IsFullyBooked) classes.Add("fully-booked");
+        if (!day.IsAvailable) classes.Add("unavailable");
+        if (day.HasMeeting) classes.Add("user-booked");
+
+        return string.Join(" ", classes);
+    }
+
+    private string GetDayTooltip(CalendarDay day)
+    {
+        if (!day.Date.HasValue) return "";
+        if (day.IsPast) return "Nelze rezervovat v minulosti";
+        if (day.IsToday) return "Nelze rezervovat na dnešek";
+        if (day.IsWeekend) return "Víkendy nejsou dostupné";
+        if (day.IsHoliday) return "Státní svátek";
+        if (day.IsTooFarAhead) return "Maximálně 2 měsíce dopředu";
+        if (day.IsFullyBooked) return "Den je plně obsazen";
+        if (day.BookingCount > 0) return $"{day.BookingCount}/3 schůzek obsazeno";
+        return "Klikněte pro sjednání schůzky";
+    }
+
+    private async Task OnDateChanged()
+    {
+        UpdateAvailableMonthsAndYears();
+        await GenerateCalendarDays();
+    }
+
+    private async Task PreviousMonth()
+    {
+        if (!CanGoPrevious) return;
+
+        if (SelectedMonth == 1)
+        {
+            SelectedMonth = 12;
+            SelectedYear--;
+        }
+        else
+        {
+            SelectedMonth--;
+        }
+        UpdateAvailableMonthsAndYears();
+        await GenerateCalendarDays();
+    }
+
+    private async Task NextMonth()
+    {
+        if (!CanGoNext) return;
+
+        if (SelectedMonth == 12)
+        {
+            SelectedMonth = 1;
+            SelectedYear++;
+        }
+        else
+        {
+            SelectedMonth++;
+        }
+        UpdateAvailableMonthsAndYears();
+        await GenerateCalendarDays();
+    }
+
+    private async Task GoToToday()
+    {
+        var today = DateTime.Today;
+        SelectedMonth = today.Month;
+        SelectedYear = today.Year;
+        UpdateAvailableMonthsAndYears();
+        await GenerateCalendarDays();
+    }
+
+    private async Task OnDayClick(CalendarDay day)
+    {
+        if (!day.Date.HasValue || !day.IsAvailable) return;
+
+        SelectedDay = day;
+        SelectedDuration = 30;
+        SelectedTimeSlot = null;
+        BookingFirstName = "";
+        BookingLastName = "";
+        BookingError = "";
+
+        await GenerateTimeSlots();
+        ShowBookingModal = true;
+    }
+
+    private async Task GenerateTimeSlots()
+    {
+        AvailableTimeSlots.Clear();
+        if (SelectedDay?.Date == null || CalendarOwner == null) return;
+
+        var date = SelectedDay.Date.Value;
+        var existingMeetings = GetMeetingsForDate(date);
+
+        // Working hours: 9:00 - 16:00
+        var startHour = new TimeSpan(9, 0, 0);
+        var endHour = new TimeSpan(16, 0, 0);
+        var duration = TimeSpan.FromMinutes(SelectedDuration);
+        var breakTime = TimeSpan.FromMinutes(15);
+
+        // Generate slots every 15 minutes
+        var currentTime = startHour;
+        while (currentTime + duration <= endHour)
+        {
+            var slotEnd = currentTime + duration;
+            var slot = new TimeSlot
+            {
+                StartTime = currentTime,
+                EndTime = slotEnd,
+                IsAvailable = true,
+                UnavailableReason = ""
+            };
+
+            // Check if slot conflicts with existing meetings (including 15 min buffer)
+            foreach (var meeting in existingMeetings)
+            {
+                var meetingStart = meeting.StartTime - breakTime; //TODO: Configuration
+                var meetingEnd = meeting.EndTime + breakTime;
+
+                if (currentTime < meetingEnd && slotEnd > meetingStart)
+                {
+                    slot.IsAvailable = false;
+                    slot.UnavailableReason = "obsazeno";
+                    break;
+                }
+            }
+
+            AvailableTimeSlots.Add(slot);
+            currentTime = currentTime.Add(TimeSpan.FromMinutes(15));
+        }
+    }
+
+    private async Task OnDurationChanged(int duration)
+    {
+        SelectedDuration = duration;
+        SelectedTimeSlot = null;
+        await GenerateTimeSlots();
+    }
+
+    private void OnTimeSlotSelected(TimeSlot slot)
+    {
+        if (slot.IsAvailable)
+        {
+            SelectedTimeSlot = slot;
+        }
+    }
+
+    private void CloseModal()
+    {
+        ShowBookingModal = false;
+        SelectedDay = null;
+        SelectedTimeSlot = null;
+    }
+
+    private async Task ConfirmBooking()
+    {
+        if (!CanConfirmBooking || SelectedDay?.Date == null || CalendarOwner == null) return;
+
+        BookingError = "";
+
+        try
+        {
+            var meeting = new Meeting
+            {
+                Date = SelectedDay.Date.Value,
+                StartTime = SelectedTimeSlot!.StartTime,
+                EndTime = SelectedTimeSlot.EndTime,
+                GuestFirstName = BookingFirstName.Trim(),
+                GuestLastName = BookingLastName.Trim(),
+                CreatedAt = DateTime.Now
+            };
+
+            await BookingService.AssignMeetingToPerson(CalendarOwner.GoogleId, meeting);
+            await BookingService.MarkLinkExpired(Guid.Parse(LinkToken));
+            MeetingBooked = true;
+            ShowBookingModal = false;
+        }
+        catch (Exception ex)
+        {
+            BookingError = "Nepodařilo se vytvořit schůzku. Zkuste to prosím znovu.";
+            //TODO: Log exception
+            Console.WriteLine(ex);
+        }
+    }
+
+    public class TimeSlot
+    {
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public bool IsAvailable { get; set; }
+        public string UnavailableReason { get; set; } = "";
+    }
+}
