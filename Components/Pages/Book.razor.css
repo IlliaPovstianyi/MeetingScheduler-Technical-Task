@@ -529,6 +529,21 @@
     left: calc(50% - 11px);
 }
 
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    background-color: #f0f2f5;
+    color: #3c4043;
+}
+
 /* ----- MODAL STYLES ----- */
 .modal-overlay {
     position: fixed;
@@ -554,6 +569,7 @@
     overflow-y: auto;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
     animation: scaleIn 0.3s ease;
+    font-family: 'Open Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 .modal-header {
@@ -592,6 +608,7 @@
 
 .modal-body {
     padding: 24px;
+    font-family: 'Open Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 .modal-footer {
@@ -615,6 +632,7 @@
     font-weight: 600;
     color: #3c4043;
     margin-bottom: 8px;
+    font-family: 'Open Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 .form-input {
@@ -684,6 +702,7 @@
     font-size: 0.9rem;
     font-weight: 500;
     color: #3c4043;
+    font-family: 'Open Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 .duration-option.selected .duration-label {
@@ -880,7 +899,14 @@
         height: 40px;
     }
 
-    .profile-avatar,
+    .profile-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e8eaed;
+    }
+
     .profile-avatar-placeholder {
         width: 36px;
         height: 36px;
@@ -956,6 +982,7 @@
 
     .modal-body {
         padding: 20px;
+        font-family: 'Open Sans', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     }
 
     .modal-footer {
