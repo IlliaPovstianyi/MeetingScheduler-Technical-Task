@@ -29,7 +29,7 @@
                     }
                 </Authorized>
                 <NotAuthorized>
-                    <a href="/" class="nav-btn login-btn">Přihlásit se</a>
+                    <a href="/" class="nav-btn back-btn">Přihlásit se</a>
                 </NotAuthorized>
             </AuthorizeView>
         </div>
@@ -674,6 +674,7 @@
 
             await BookingService.AssignMeetingToPerson(CalendarOwner.GoogleId, meeting);
             await BookingService.MarkLinkExpired(Guid.Parse(LinkToken));
+            BookedMeeting = meeting;
             MeetingBooked = true;
             ShowBookingModal = false;
         }
