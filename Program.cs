@@ -17,6 +17,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IHolidayService, CzechHolidays>();
+builder.Services.AddScoped<IBookingService, BookingService>();
 
 // Add support for HttpContext in Blazor
 builder.Services.AddHttpContextAccessor();

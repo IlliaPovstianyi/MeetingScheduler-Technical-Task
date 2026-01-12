@@ -18,4 +18,9 @@ public class AppDbContext : DbContext
     {
         get { return Set<Meeting>(); }
     }
+
+    public DbSet<BookingLink> BookingLinks
+    {
+        get { return Set<BookingLink>(); }
+    }
 }
