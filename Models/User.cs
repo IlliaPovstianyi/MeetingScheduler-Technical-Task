@@ -9,6 +9,6 @@ public class User
     public string LastName { get; set; } = string.Empty;
     public string? ProfilePictureUrl { get; set; }
     public DateTime AuthenticatedAt { get; set; }
-    public Meeting[]? Meetings { get; set; }
+    public List<Meeting>? Meetings { get; set; }
 
 }

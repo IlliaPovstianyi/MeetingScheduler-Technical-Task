@@ -106,7 +106,7 @@
                                 @if (day.Date.HasValue)
                                 {
                                     <span class="day-number">@day.Date.Value.Day</span>
-                                    @if (day.IsBooked)
+                                    @if (day.IsFullyBooked)
                                     {
                                         <span class="day-indicator booked"></span>
                                     }
@@ -205,7 +205,7 @@
                 Date = date,
                 IsToday = date == DateTime.Today,
                 IsWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday,
-                IsBooked = false, // Set this based on your data
+                IsFullyBooked = false, // Set this based on your data
                 IsHoliday = HolidayService.IsHoliday(date) 
             });
         }
@@ -233,7 +233,7 @@
 
         if (day.IsToday) classes.Add("today");
         if (day.IsWeekend) classes.Add("weekend");
-        if (day.IsBooked) classes.Add("booked");
+        if (day.IsFullyBooked) classes.Add("booked");
         if (day.IsHoliday) classes.Add("holiday");
 
         return string.Join(" ", classes);

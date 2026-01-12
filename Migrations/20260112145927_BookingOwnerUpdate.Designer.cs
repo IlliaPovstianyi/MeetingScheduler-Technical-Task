@@ -4,6 +4,7 @@ using MeetingScheduler_Technical_Task.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MeetingSchedulerTechnicalTask.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260112145927_BookingOwnerUpdate")]
+    partial class BookingOwnerUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,30 +56,21 @@ namespace MeetingSchedulerTechnicalTask.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<TimeSpan>("EndTime")
-                        .HasColumnType("time");
+                    b.Property<DateTime>("EndTime")
+                        .HasColumnType("datetime2");
 
-                    b.Property<string>("GuestFirstName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("GuestLastName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<TimeSpan>("StartTime")
-                        .HasColumnType("time");
-
-                    b.Property<Guid?>("UserId")
+                    b.Property<Guid>("GuestID")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("StartTime")
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("GuestID");
 
                     b.ToTable("Meetings");
                 });
@@ -127,9 +121,13 @@ namespace MeetingSchedulerTechnicalTask.Migrations
 
             modelBuilder.Entity("MeetingScheduler_Technical_Task.Models.Meeting", b =>
                 {
-                    b.HasOne("MeetingScheduler_Technical_Task.Models.User", null)
+                    b.HasOne("MeetingScheduler_Technical_Task.Models.User", "Guest")
                         .WithMany("Meetings")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("GuestID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guest");
                 });
 
             modelBuilder.Entity("MeetingScheduler_Technical_Task.Models.User", b =>
