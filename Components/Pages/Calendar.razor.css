@@ -336,16 +336,16 @@
 
 /* Has Meeting Styles */
 .calendar-day.has-meeting:not(.today) {
-    background-color: #ecfdf5;
-    border: 2px solid #10b981;
+    background-color: #0075ff1f;
+    border: 2px solid #0075ff;
 }
 
 .calendar-day.has-meeting:not(.today):hover {
-    background-color: #d1fae5;
+    background-color: #0075ff;
 }
 
 .calendar-day.has-meeting.weekend:not(.today) {
-    background-color: #fef2f2;
+    background-color: #0075ff1f;
     border: 2px solid #10b981;
 }
 
@@ -368,7 +368,7 @@
     min-width: 18px;
     height: 18px;
     padding: 0 5px;
-    background-color: #10b981;
+    background-color: #0075ff;
     color: #ffffff;
     border-radius: 9px;
     font-size: 0.7rem;
@@ -427,7 +427,7 @@
 }
 
 .legend-dot.has-meeting {
-    background-color: #10b981;
+    background-color: #109db9;
 }
 
 .legend-dot.holiday-dot {
