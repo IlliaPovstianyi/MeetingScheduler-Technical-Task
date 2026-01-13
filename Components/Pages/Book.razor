@@ -66,7 +66,7 @@
                     byla úspěšně rezervována.
                 </p>
                 <div class="booking-summary">
-                    <p><strong>Datum:</strong> @BookedMeeting?.Date.ToString("d. MMMM yyyy")</p>
+                    <p><strong>Datum:</strong> @BookedMeeting?.Date.ToString("d. M. yyyy")</p>
                     <p><strong>Čas:</strong> @BookedMeeting?.StartTime.ToString(@"hh\:mm") - @BookedMeeting?.EndTime.ToString(@"hh\:mm")</p>
                 </div>
             </div>
@@ -186,7 +186,7 @@
     <div class="modal-overlay" @onclick="CloseModal">
         <div class="modal-content" @onclick:stopPropagation>
             <div class="modal-header">
-                <h2>Sjednat schůzku - @SelectedDay.Date?.ToString("d. MMMM yyyy")</h2>
+                <h2>Sjednat schůzku - @SelectedDay.Date?.ToString("d. M. yyyy")</h2>
                 <button class="modal-close" @onclick="CloseModal">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
