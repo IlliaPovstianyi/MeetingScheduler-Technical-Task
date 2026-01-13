@@ -15,7 +15,7 @@ public class UserRepository : IUserRepository
     public async Task<User?> FindByGoogleIdAsync(string googleId)
     {
         return await context.Users
-        .Where(u => u.GoogleId == googleId)
+        .Where(u => u.GoogleId == googleId).Include(u => u.Meetings)
         .FirstOrDefaultAsync();
     }
     public async Task<User?> GetByIdAsync(Guid id)

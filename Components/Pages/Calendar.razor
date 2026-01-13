@@ -106,6 +106,10 @@
                                 @if (day.Date.HasValue)
                                 {
                                     <span class="day-number">@day.Date.Value.Day</span>
+                                    @if (day.BookingCount > 0)
+                                    {
+                                        <span class="meeting-count">@day.BookingCount</span>
+                                    }
                                     @if (day.IsFullyBooked)
                                     {
                                         <span class="day-indicator booked"></span>
@@ -118,9 +122,102 @@
                             </div>
                         }
                     </div>
+
+                    <!-- Legend -->
+                    <div class="calendar-legend">
+                        <div class="legend-item">
+                            <span class="legend-dot has-meeting"></span>
+                            <span class="legend-text">Schůzky</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot holiday-dot"></span>
+                            <span class="legend-text">Svátek</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot weekend-dot"></span>
+                            <span class="legend-text">Víkend</span>
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>
+
+        <!-- Meeting Modal -->
+        @if (ShowMeetingModal && SelectedDay != null)
+        {
+            <div class="modal-overlay" @onclick="CloseMeetingModal">
+                <div class="modal-content" @onclick:stopPropagation="true">
+                    <div class="modal-header">
+                        <h2>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: middle;">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            @SelectedDay.Value.ToString("d. MMMM yyyy", new System.Globalization.CultureInfo("cs-CZ"))
+                        </h2>
+                        <button class="modal-close" @onclick="CloseMeetingModal">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        @if (SelectedDayMeetings.Any())
+                        {
+                            <div class="meetings-list">
+                                @foreach (var meeting in SelectedDayMeetings.OrderBy(m => m.StartTime))
+                                {
+                                    <div class="meeting-item">
+                                        <div class="meeting-time-badge">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <polyline points="12 6 12 12 16 14"></polyline>
+                                            </svg>
+                                            @meeting.StartTime.ToString(@"hh\:mm") - @meeting.EndTime.ToString(@"hh\:mm")
+                                        </div>
+                                        <div class="meeting-details">
+                                            <div class="meeting-guest">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                                    <circle cx="12" cy="7" r="4"></circle>
+                                                </svg>
+                                                <span>@meeting.GuestFirstName @meeting.GuestLastName</span>
+                                            </div>
+                                            <div class="meeting-duration">
+                                                @{
+                                                    var duration = meeting.EndTime - meeting.StartTime;
+                                                    var minutes = (int)duration.TotalMinutes;
+                                                }
+                                                <span class="duration-badge">@minutes min</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="no-meetings">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                    <line x1="9" y1="16" x2="15" y2="16"></line>
+                                </svg>
+                                <p>Na tento den nemáte naplánované žádné schůzky</p>
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-secondary" @onclick="CloseMeetingModal">Zavřít</button>
+                    </div>
+                </div>
+            </div>
+        }
     </Authorized>
 </AuthorizeView>
 
@@ -136,6 +233,11 @@
     private List<CalendarDay> CalendarDays { get; set; } = new();
     private List<(int Value, string Name)> Months { get; set; } = new();
     private List<int> Years { get; set; } = new();
+
+    // Modal state
+    private bool ShowMeetingModal { get; set; } = false;
+    private DateTime? SelectedDay { get; set; }
+    private List<Meeting> SelectedDayMeetings { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -200,13 +302,18 @@
         for (int day = 1; day <= daysInMonth; day++)
         {
             var date = new DateTime(SelectedYear, SelectedMonth, day);
+            var meetingsOnDay = GetMeetingsForDate(date);
+            
             CalendarDays.Add(new CalendarDay
             {
                 Date = date,
                 IsToday = date == DateTime.Today,
                 IsWeekend = date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday,
-                IsFullyBooked = false, // Set this based on your data
-                IsHoliday = HolidayService.IsHoliday(date) 
+                IsFullyBooked = false,
+                IsHoliday = HolidayService.IsHoliday(date),
+                HasMeeting = meetingsOnDay.Any(),
+                BookingCount = meetingsOnDay.Count,
+                IsPast = date < DateTime.Today
             });
         }
 
@@ -219,6 +326,16 @@
                 CalendarDays.Add(new CalendarDay { Date = null });
             }
         }
+    }
+
+    private List<Meeting> GetMeetingsForDate(DateTime date)
+    {
+        if (CurrentUser?.Meetings == null)
+            return new List<Meeting>();
+
+        return CurrentUser.Meetings
+            .Where(m => m.Date.Date == date.Date)
+            .ToList();
     }
 
     private string GetDayClasses(CalendarDay day)
@@ -235,6 +352,8 @@
         if (day.IsWeekend) classes.Add("weekend");
         if (day.IsFullyBooked) classes.Add("booked");
         if (day.IsHoliday) classes.Add("holiday");
+        if (day.HasMeeting) classes.Add("has-meeting");
+        if (day.IsPast) classes.Add("past");
 
         return string.Join(" ", classes);
     }
@@ -297,11 +416,16 @@
     {
         if (day.Date.HasValue)
         {
-            // Handle day click - you can implement your logic here
-            // For example: NavigationManager.NavigateTo($"/calendar/day/{day.Date.Value:yyyy-MM-dd}");
+            SelectedDay = day.Date.Value;
+            SelectedDayMeetings = GetMeetingsForDate(day.Date.Value);
+            ShowMeetingModal = true;
         }
     }
 
-    // Model for calendar day - allows future customization
-    
+    private void CloseMeetingModal()
+    {
+        ShowMeetingModal = false;
+        SelectedDay = null;
+        SelectedDayMeetings.Clear();
+    }
 }
