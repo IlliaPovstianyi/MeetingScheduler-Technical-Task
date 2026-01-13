@@ -29,7 +29,7 @@
                     }
                 </Authorized>
                 <NotAuthorized>
-                    <a href="/" class="nav-btn back-btn">Přihlásit se</a>
+                    <a href="/authentication" class="nav-btn back-btn">Přihlásit se</a>
                 </NotAuthorized>
             </AuthorizeView>
         </div>
@@ -221,7 +221,6 @@
                     <div class="time-slots">
                         @foreach (var slot in AvailableTimeSlots)
                         {
-                            @if(slot.IsAvailable){
                             <label class="time-slot @(slot.IsAvailable ? "" : "disabled") @(SelectedTimeSlot == slot ? "selected" : "")">
                                 <input type="radio" 
                                        name="timeslot" 
@@ -229,13 +228,14 @@
                                        disabled="@(!slot.IsAvailable)"
                                        checked="@(SelectedTimeSlot == slot)"
                                        @onchange="() => OnTimeSlotSelected(slot)" />
-                                
-                                    <span class="slot-time">
+                                <span class="slot-time">
                                     @slot.StartTime.ToString(@"hh\:mm") - @slot.EndTime.ToString(@"hh\:mm")
+                                    @if (!slot.IsAvailable)
+                                    {
+                                        <span class="slot-status">(@slot.UnavailableReason)</span>
+                                    }
                                 </span>
-                                
                             </label>
-                            }
                         }
                     </div>
                 </div>

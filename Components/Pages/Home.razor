@@ -1,5 +1,6 @@
 ﻿@page "/"
 @using System.Threading.Tasks
+@using MeetingScheduler_Technical_Task.Components.Pages
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inject IUserService UserService
@@ -115,6 +116,7 @@
         if (AuthenticationStateTask != null)
         {
             var authState = await AuthenticationStateTask;
+
             CurrentUser = await UserService.GetUserFromClaims(authState.User);
         }
     }
