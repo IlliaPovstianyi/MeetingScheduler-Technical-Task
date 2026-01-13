@@ -12,6 +12,8 @@ public class CalendarDay
     public bool IsTooFarAhead { get; set; }
     public int BookingCount { get; set; }
     public bool IsAvailable => Date.HasValue && 
+                                    !IsPast &&
+                                    !IsTooFarAhead &&
                                     !IsWeekend && 
                                     !IsHoliday && 
                                     !IsFullyBooked;
