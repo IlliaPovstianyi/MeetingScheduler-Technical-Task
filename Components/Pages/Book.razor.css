@@ -299,35 +299,30 @@
     border: none;
     background-color: #f0f2f5;
     color: #3c4043;
-    text-decoration: none;
 }
 
 .nav-btn:hover {
     background-color: #e8eaed;
 }
 
-.nav-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.back-btn {
+/* Combined selector = higher specificity */
+.nav-btn.back-btn {
     background-color: #0075ff;
     color: #ffffff;
 }
 
-.back-btn:hover:not(:disabled) {
+.nav-btn.back-btn:hover {
     background-color: #0063d1;
     box-shadow: 0 4px 12px rgba(0, 117, 255, 0.3);
 }
 
-.today-btn {
+.nav-btn.today-btn {
     background-color: #e8f0fe;
     color: #0075ff;
     font-weight: 600;
 }
 
-.today-btn:hover {
+.nav-btn.today-btn:hover {
     background-color: #d2e3fc;
 }
 
